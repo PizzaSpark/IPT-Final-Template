@@ -1,0 +1,24 @@
+.navbar {
+    display: flex;
+    height: 100px;
+    background-color: salmon;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    position: sticky;
+    top: 0;
+    padding-left: 5%;
+}
+
+.navbar-items {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    font-weight: bold;
+    align-items: center;
+}
+
+.navbar-items-tile {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
