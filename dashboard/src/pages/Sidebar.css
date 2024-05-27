@@ -1,0 +1,27 @@
+.sidebar{
+    height: 100vh;
+    width: 20%;
+    background-color: #303030;
+    font-size: 18px;
+    position: sticky;
+    top: 0;
+}
+
+.items {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 20px;
+}
+
+.items a{
+    text-decoration: none;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+    gap: 5px;
+}
