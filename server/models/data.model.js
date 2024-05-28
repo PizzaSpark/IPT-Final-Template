@@ -3,12 +3,12 @@ const { Schema, model: _model } = mongoose;
 
 const requiredString = { type: String, required: true };
 const requiredUniqueString = { type: String, required: true, unique: true };
-const collectionName = 'user-data';
+const collectionName = 'model-data';
 
 const DataModel = new Schema(
   {
-    email: requiredUniqueString,
-    password: requiredString,
+    name: requiredUniqueString,
+    image: requiredString,
   },
   { collection: collectionName } 
 );

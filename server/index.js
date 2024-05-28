@@ -5,14 +5,24 @@ const cors = require("cors");
 const fs = require("fs");
 const mongoose = require("mongoose");
 const path = require("path");
+const multer = require("multer");
 
-const DataModel = require("./models/user.model");
+const DataModel = require("./models/data.model");
 
 app.use(cors());
 app.use(bodyParser.json());
 
+// Stating the path of the uploads directory
+const uploadsDir = path.join(__dirname, "/uploads");
+
+// Create the uploads directory if it doesn't exist
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+
+app.use("/uploads", express.static(uploadsDir));
+
 const port = 1337;
-const jsonFileName = "localfile.json";
 const dbName = "final-database";
 
 app.listen(port, () => {
@@ -23,133 +33,41 @@ app.get("/", (req, res) => {
     res.send("Hello, world!");
 });
 
-//MARK: JSON
-
-//for adding
-app.post("/AddLocal", (req, res) => {
-    const incomingData = req.body;
-
-    let existingData = [];
-
-    // Check if the JSON file exists
-    if (!fs.existsSync(jsonFileName)) {
-        fs.writeFileSync(jsonFileName, JSON.stringify([], null, 2));
-        existingData = [];
-        return;
-    }
-    
-    // Read the existing data in the JSON file
-    try {
-        existingData = JSON.parse(fs.readFileSync(jsonFileName));
-    } catch (error) {
-        console.log("Can't read existing data in json file", error);
-        existingData = [];
-    }
-
-    const dataIndex = existingData.findIndex(
-        (data) => data.id === incomingData.id
-    );
-
-    if (dataIndex !== -1) {
-        res.json({
-            success: false,
-            message: "ID already exists in the JSON file",
-        });
-    } else {
-        existingData.push(newData);
-
-        fs.writeFileSync(
-            jsonFileName,
-            JSON.stringify(existingData, null, 2)
-        );
-
-        res.json({ success: true, message: "Data added successfully!" });
-    }
-});
-
-//for viewing
-app.get("/ViewLocal", (req, res) => {
-
-    // Check if the JSON file exists
-    if (!fs.existsSync(jsonFileName)) {
-        fs.writeFileSync(jsonFileName, JSON.stringify([], null, 2));
-        return res.json([]);
-    }
-
-    // Read the existing data in the JSON file
-    try {
-        const existingData = JSON.parse(fs.readFileSync(jsonFileName));
-        return res.json(existingData);
-    } catch (error) {
-        console.error("Error reading existing data:", error);
-        return res.status(500).json({ error: "Internal server error" });
-    }
-});
-
-//for updating
-app.post("/UpdateLocal", async (req, res) => {
-    const incomingData = req.body;
-
-    let existingData = [];
-    try {
-        existingData = JSON.parse(fs.readFileSync(jsonFileName));
-    } catch (error) {
-        console.log("Can't read existing data in the JSON file", error);
-    }
-
-    const dataIndex = existingData.findIndex(
-        (data) => data.id === incomingData.id
-    );
-
-    if (dataIndex !== -1) {
-        existingData[dataIndex] = newData;
-
-        fs.writeFileSync(
-            jsonFileName,
-            JSON.stringify(existingData, null, 2)
-        );
-
-        res.json({ success: true, message: "Data updated successfully!" });
-    } else {
-        res.json({ success: false, message: "Data specified not found" });
-    }
-});
-
-//for deleting
-app.delete("/DeleteLocal", (req, res) => {
-    const incomingData = req.body.id;
-
-    let existingData = [];
-    try {
-        existingData = JSON.parse(fs.readFileSync(jsonFileName));
-    } catch (error) {
-        console.log("Can't read existing data in json file", error);
-    }
-
-    const dataIndex = existingData.findIndex(
-        (data) => data.id === incomingData
-    );
-
-    if (dataIndex !== -1) {
-        existingData.splice(dataIndex, 1);
-
-        fs.writeFileSync(jsonFileName, JSON.stringify(existingData, null, 2));
-
-        res.json({ success: true, message: "Data deleted successfully!" });
-    } else {
-        res.json({ success: false, message: "Data not found" });
-    }
-});
-
 //MARK: MongoDB
 mongoose
     .connect("mongodb://localhost:27017/" + dbName)
     .then(() => console.log("Database connected successfully"))
     .catch((err) => console.error("Database connection error", err));
 
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, uploadsDir);
+        },
+        filename: function (req, file, cb) {
+            filename = Date.now() + "-" + file.originalname;
+            cb(null, filename);
+        },
+    });
+
+    const upload = multer({ storage: storage });
+
+// Error handling middleware
+const handleError = (err, res) => {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+};
+
+    // Function to delete image
+const deleteImage = (imagePath) => {
+    fs.unlink(imagePath, (err) => {
+        if (err) console.error("Error deleting old image:", err);
+    });
+};
+
 //add
-app.post("/AddEntry", async (req, res) => {
+app.post("/AddEntry", upload.single("image"), async (req, res) => {
     const incomingData = req.body;
+    incomingData.image = req.file.filename;
 
     try {
         const dataObject = new DataModel(incomingData);
@@ -157,7 +75,7 @@ app.post("/AddEntry", async (req, res) => {
         res.json({ success: true, message: "Data added successfully!" });
     } catch (error) {
         console.error("Error adding data:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        handleError(error, res);
     }
 });
 
@@ -168,47 +86,74 @@ app.get("/ViewEntries", async (req, res) => {
         res.json(gotDataList);
     } catch (error) {
         console.error("Error getting data:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        handleError(error, res);
     }
 });
 
 //edit
-app.post("/EditEntry", async (req, res) => {
+app.post("/EditEntry", upload.single("image"), async (req, res) => {
     const incomingData = req.body;
+    if (req.file) {
+        incomingData.image = req.file.filename;
+    }
 
     try {
-        const dataObject = await DataModel.findOne({
-            email: incomingData.email,
-        });
+        const dataObject = await MenuModel.findOne({ name: incomingData.name });
         if (!dataObject) {
-            res.json({ success: false, message: "Data not found" });
-        } else {
-            Object.assign(dataObject, incomingData);
-            await dataObject.save();
-            res.json({ success: true, message: "Data updated successfully!" });
+            return res.json({ message: "Data not found" });
         }
+
+        // Delete the old image only if a new one has been uploaded
+        if (
+            req.file &&
+            dataObject.image &&
+            typeof dataObject.image === "string"
+        ) {
+            try {
+                const imagePath = path.join(uploadsDir, dataObject.image);
+                deleteImage(imagePath);
+            } catch (urlError) {
+                console.error("Error parsing old image URL:", urlError);
+            }
+        }
+
+        // Update the document and save it
+        Object.assign(dataObject, incomingData);
+        await dataObject.save();
+        res.json({ success: true, message: "Data updated successfully!" });
     } catch (error) {
-        console.error("Error updating data:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        handleError(error, res);
     }
 });
 
 //delete
 app.delete("/DeleteEntry", async (req, res) => {
     const incomingData = req.body;
-
     try {
-        const dataObject = await DataModel.findOne({
-            email: incomingData.email,
-        });
+        const dataObject = await MenuModel.findOne({ name: incomingData.name });
         if (!dataObject) {
-            res.json({ success: false, message: "Data not found" });
-        } else {
-            await dataObject.remove();
-            res.json({ success: true, message: "Data deleted successfully!" });
+            return res.json({ message: "Data not found" });
         }
+
+        // Delete the image if it exists
+        if (dataObject.image && typeof dataObject.image === "string") {
+            const imagePath = path.join(uploadsDir, dataObject.image);
+            console.log("Deleting image at path:", imagePath);
+            deleteImage(imagePath);
+        } else {
+            console.error("No valid image path found for deletion");
+        }
+
+        try {
+            await MenuModel.deleteOne({ _id: dataObject._id });
+        } catch (error) {
+            console.error("Error deleting data:", error);
+            return res.json({ message: "Error deleting data" });
+        }
+
+        res.json({ success: true, message: "Data deleted successfully!" });
     } catch (error) {
         console.error("Error deleting data:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        handleError(error, res);
     }
 });
