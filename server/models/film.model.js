@@ -9,10 +9,10 @@ const optionalString = { type: String };
 const DataModel = new Schema(
   {
     poster: requiredString,
-    name: requiredUniqueString,
+    title: requiredUniqueString,
     director: requiredString,
     year: requiredString,
-    logline, optionalString,
+    logline: optionalString,
   },
   { collection: collectionName } 
 );

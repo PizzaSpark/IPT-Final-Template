@@ -23,7 +23,7 @@ if (!fs.existsSync(uploadsDir)) {
 app.use("/uploads", express.static(uploadsDir));
 
 const port = 1337;
-const dbName = "final-database";
+const dbName = "film-database";
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -65,9 +65,9 @@ const deleteImage = (imagePath) => {
 };
 
 //add
-app.post("/films", upload.single("image"), async (req, res) => {
+app.post("/films", upload.single("poster"), async (req, res) => {
     const incomingData = req.body;
-    incomingData.image = req.file.filename;
+    incomingData.poster = req.file.filename;
 
     try {
         const dataObject = new DataModel(incomingData);
@@ -91,10 +91,10 @@ app.get("/films", async (req, res) => {
 });
 
 //edit
-app.put("/films/:id", upload.single("image"), async (req, res) => {
+app.put("/films/:id", upload.single("poster"), async (req, res) => {
     const incomingData = req.body;
     if (req.file) {
-        incomingData.image = req.file.filename;
+        incomingData.poster = req.file.filename;
     }
 
     try {
@@ -106,11 +106,11 @@ app.put("/films/:id", upload.single("image"), async (req, res) => {
         // Delete the old image only if a new one has been uploaded
         if (
             req.file &&
-            dataObject.image &&
-            typeof dataObject.image === "string"
+            dataObject.poster && // Changed from dataObject.image to dataObject.poster
+            typeof dataObject.poster === "string" // Changed from dataObject.image to dataObject.poster
         ) {
             try {
-                const imagePath = path.join(uploadsDir, dataObject.image);
+                const imagePath = path.join(uploadsDir, dataObject.poster); // Changed from dataObject.image to dataObject.poster
                 deleteImage(imagePath);
             } catch (urlError) {
                 console.error("Error parsing old image URL:", urlError);
@@ -135,8 +135,8 @@ app.delete("/films/:id", async (req, res) => {
         }
 
         // Delete the image if it exists
-        if (dataObject.image && typeof dataObject.image === "string") {
-            const imagePath = path.join(uploadsDir, dataObject.image);
+        if (dataObject.poster && typeof dataObject.poster === "string") {
+            const imagePath = path.join(uploadsDir, dataObject.poster);
             console.log("Deleting image at path:", imagePath);
             deleteImage(imagePath);
         } else {

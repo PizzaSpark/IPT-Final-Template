@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardMedia,
     Box,
     Button,
     Divider,
@@ -12,12 +16,13 @@ import {
     MenuItem,
     Modal,
     TextField,
+    Typography,
 } from "@mui/material";
 
 export default function Mongo() {
     const initialData = {
         poster: "",
-        name: "",
+        title: "",
         director: "",
         year: "",
         logline: "",
@@ -33,7 +38,51 @@ export default function Mongo() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [refreshDataList]);
+
+    function FilmCard({ film }) {
+        const imageUrl = `http://localhost:1337/uploads/${film.poster}`;
+
+        return (
+            <Card className="film-card" onClick={() => openModal(film, true)}>
+                <CardMedia
+                    component="img"
+                    height="450"
+                    image={imageUrl}
+                    alt={film.poster}
+                />
+                <CardHeader
+                    title={
+                        <div style={{ whiteSpace: "nowrap" }}>{film.title}</div>
+                    }
+                ></CardHeader>
+
+                <CardContent>
+                    <Typography
+                        variant="body2"
+                        component="div"
+                        color="text.secondary"
+                    >
+                        {film.director}
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        component="div"
+                        color="text.secondary"
+                    >
+                        {film.year}
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        component="div"
+                        color="text.secondary"
+                    >
+                        {film.logline}
+                    </Typography>
+                </CardContent>
+            </Card>
+        );
+    }
 
     const fetchData = async () => {
         await getFilmList();
@@ -167,7 +216,7 @@ export default function Mongo() {
         if (e.target.files[0]) {
             setCurrentData({
                 ...currentData,
-                image: e.target.files[0],
+                poster: e.target.files[0],
             });
             setImageUrl(URL.createObjectURL(e.target.files[0]));
         }
@@ -177,9 +226,17 @@ export default function Mongo() {
         <div className="page">
             <h1>Films</h1>
 
-            <div className="menu-list">
-                {dataList.map((menu, index) => (
-                    <ProductCard key={index} menu={menu} />
+            <Button
+                className="add-button"
+                variant="contained"
+                onClick={() => openModal(initialData, false)}
+            >
+                ADD FILM
+            </Button>
+
+            <div className="film-list">
+                {dataList.map((film, index) => (
+                    <FilmCard key={index} film={film} />
                 ))}
             </div>
 
@@ -205,11 +262,11 @@ export default function Mongo() {
                                         }}
                                     />
                                 </div>
-                            ) : typeof currentData.image === "string" &&
-                              currentData.image !== "" ? (
+                            ) : typeof currentData.poster === "string" &&
+                              currentData.poster !== "" ? (
                                 <div className="image-container">
                                     <img
-                                        src={`http://localhost:1337/uploads/${currentData.image}`}
+                                        src={`http://localhost:1337/uploads/${currentData.poster}`}
                                         alt="Current"
                                         style={{
                                             width: "300px",
@@ -238,7 +295,7 @@ export default function Mongo() {
                             <TextField
                                 variant="outlined"
                                 id="poster"
-                                required
+                                required={!isEditMode}
                                 type="file"
                                 label={
                                     isEditMode ? "Update Image" : "Add Image"
@@ -282,65 +339,34 @@ export default function Mongo() {
                             <TextField
                                 variant="outlined"
                                 id="logline"
-                                required
                                 label="Logline"
                                 value={currentData.logline}
                                 onChange={handleChange}
                             />
 
-                            <Button
-                                className="tablebutton"
-                                variant="contained"
-                                type="submit"
-                            >
-                                {isEditMode ? "UPDATE" : "ADD"}
-                            </Button>
+                            <div className="button-group">
+                                <Button
+                                    className="tablebutton"
+                                    variant="contained"
+                                    type="submit"
+                                >
+                                    {isEditMode ? "UPDATE" : "ADD"}
+                                </Button>
+
+                                {isEditMode && (
+                                    <Button
+                                        className="tablebutton"
+                                        variant="contained"
+                                        onClick={handleDeleteData}
+                                    >
+                                        DELETE
+                                    </Button>
+                                )}
+                            </div>
                         </form>
                     )}
                 </Box>
             </Modal>
         </div>
-    );
-}
-
-function FilmCard({ film }) {
-    const imageUrl = `http://localhost:1337/uploads/${film.poster}`;
-
-    return (
-        <Card className="film-card">
-            <CardMedia
-                component="img"
-                height="194"
-                image={imageUrl}
-                alt={film.poster}
-            />
-            <CardHeader
-                title={<div style={{ whiteSpace: "nowrap" }}>{film.title}</div>}
-            ></CardHeader>
-
-            <CardContent>
-                <Typography
-                    variant="body2"
-                    component="div"
-                    color="text.secondary"
-                >
-                    {film.director}
-                </Typography>
-                <Typography
-                    variant="body2"
-                    component="div"
-                    color="text.secondary"
-                >
-                    {film.year}
-                </Typography>
-                <Typography
-                    variant="body2"
-                    component="div"
-                    color="text.secondary"
-                >
-                    {film.logline}
-                </Typography>
-            </CardContent>
-        </Card>
     );
 }

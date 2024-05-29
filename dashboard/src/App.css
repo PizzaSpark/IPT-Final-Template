@@ -9,6 +9,7 @@ body {
 .page {
     box-sizing: border-box;
     display: flex;
+    flex-direction: column;
     height: 100vh;
     width: 100vw;
 }
@@ -57,7 +58,7 @@ form {
 
 .film-card {
     width: 300px;
-    height: 500px;
+    height: 600px;
     object-fit: cover;
 }
 
@@ -67,3 +68,16 @@ form {
     align-items: center;
 }
 
+.add-button {
+    width: 10%;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.button-group > * {
+    flex: 1;
+}
