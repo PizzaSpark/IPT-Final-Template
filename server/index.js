@@ -106,11 +106,11 @@ app.put("/films/:id", upload.single("poster"), async (req, res) => {
         // Delete the old image only if a new one has been uploaded
         if (
             req.file &&
-            dataObject.poster && // Changed from dataObject.image to dataObject.poster
-            typeof dataObject.poster === "string" // Changed from dataObject.image to dataObject.poster
+            dataObject.poster && 
+            typeof dataObject.poster === "string" 
         ) {
             try {
-                const imagePath = path.join(uploadsDir, dataObject.poster); // Changed from dataObject.image to dataObject.poster
+                const imagePath = path.join(uploadsDir, dataObject.poster);
                 deleteImage(imagePath);
             } catch (urlError) {
                 console.error("Error parsing old image URL:", urlError);

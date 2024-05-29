@@ -63,21 +63,7 @@ export default function Mongo() {
                         component="div"
                         color="text.secondary"
                     >
-                        {film.director}
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        component="div"
-                        color="text.secondary"
-                    >
                         {film.year}
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        component="div"
-                        color="text.secondary"
-                    >
-                        {film.logline}
                     </Typography>
                 </CardContent>
             </Card>
@@ -167,7 +153,7 @@ export default function Mongo() {
         }
     };
 
-    const handleDeleteData = async (data) => {
+    const handleDeleteData = async (e) => {
         const confirmDelete = window.confirm(
             "Are you sure you want to delete this menu item?"
         );
@@ -178,13 +164,16 @@ export default function Mongo() {
 
         try {
             const response = await axios.delete(
-                `http://localhost:1337/films/${data._id}`
+                `http://localhost:1337/films/${currentData._id}`
             );
 
             const result = response.data;
             if (result.success) {
                 alert(result.message);
                 setRefreshDataList(!refreshDataList);
+                setModalState(false);
+                setImageUrl("");
+                
             } else {
                 alert("Failed to delete menu. Please try again!.");
             }
