@@ -313,7 +313,6 @@ export default function Mongo() {
                                 label="Title"
                                 value={currentData.title}
                                 onChange={handleChange}
-                                disabled={isEditMode}
                             />
 
                             <TextField
