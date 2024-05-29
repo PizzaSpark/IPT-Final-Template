@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const multer = require("multer");
 
-const DataModel = require("./models/data.model");
+const DataModel = require("./models/film.model");
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -39,17 +39,17 @@ mongoose
     .then(() => console.log("Database connected successfully"))
     .catch((err) => console.error("Database connection error", err));
 
-    const storage = multer.diskStorage({
-        destination: function (req, file, cb) {
-            cb(null, uploadsDir);
-        },
-        filename: function (req, file, cb) {
-            filename = Date.now() + "-" + file.originalname;
-            cb(null, filename);
-        },
-    });
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadsDir);
+    },
+    filename: function (req, file, cb) {
+        filename = Date.now() + "-" + file.originalname;
+        cb(null, filename);
+    },
+});
 
-    const upload = multer({ storage: storage });
+const upload = multer({ storage: storage });
 
 // Error handling middleware
 const handleError = (err, res) => {
@@ -57,7 +57,7 @@ const handleError = (err, res) => {
     res.status(500).json({ error: "Internal Server Error" });
 };
 
-    // Function to delete image
+// Function to delete image
 const deleteImage = (imagePath) => {
     fs.unlink(imagePath, (err) => {
         if (err) console.error("Error deleting old image:", err);
@@ -65,7 +65,7 @@ const deleteImage = (imagePath) => {
 };
 
 //add
-app.post("/AddEntry", upload.single("image"), async (req, res) => {
+app.post("/films", upload.single("image"), async (req, res) => {
     const incomingData = req.body;
     incomingData.image = req.file.filename;
 
@@ -80,7 +80,7 @@ app.post("/AddEntry", upload.single("image"), async (req, res) => {
 });
 
 //view
-app.get("/ViewEntries", async (req, res) => {
+app.get("/films", async (req, res) => {
     try {
         const gotDataList = await DataModel.find();
         res.json(gotDataList);
@@ -91,14 +91,14 @@ app.get("/ViewEntries", async (req, res) => {
 });
 
 //edit
-app.post("/EditEntry", upload.single("image"), async (req, res) => {
+app.put("/films/:id", upload.single("image"), async (req, res) => {
     const incomingData = req.body;
     if (req.file) {
         incomingData.image = req.file.filename;
     }
 
     try {
-        const dataObject = await MenuModel.findOne({ name: incomingData.name });
+        const dataObject = await DataModel.findById(req.params.id);
         if (!dataObject) {
             return res.json({ message: "Data not found" });
         }
@@ -127,10 +127,9 @@ app.post("/EditEntry", upload.single("image"), async (req, res) => {
 });
 
 //delete
-app.delete("/DeleteEntry", async (req, res) => {
-    const incomingData = req.body;
+app.delete("/films/:id", async (req, res) => {
     try {
-        const dataObject = await MenuModel.findOne({ name: incomingData.name });
+        const dataObject = await DataModel.findById(req.params.id);
         if (!dataObject) {
             return res.json({ message: "Data not found" });
         }
@@ -145,7 +144,7 @@ app.delete("/DeleteEntry", async (req, res) => {
         }
 
         try {
-            await MenuModel.deleteOne({ _id: dataObject._id });
+            await DataModel.deleteOne({ _id: dataObject._id });
         } catch (error) {
             console.error("Error deleting data:", error);
             return res.json({ message: "Error deleting data" });

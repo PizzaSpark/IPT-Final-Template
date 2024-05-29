@@ -1,14 +1,18 @@
 const mongoose = require('mongoose');
 const { Schema, model: _model } = mongoose;
 
+const collectionName = 'film-data';
 const requiredString = { type: String, required: true };
 const requiredUniqueString = { type: String, required: true, unique: true };
-const collectionName = 'model-data';
+const optionalString = { type: String };
 
 const DataModel = new Schema(
   {
+    poster: requiredString,
     name: requiredUniqueString,
-    image: requiredString,
+    director: requiredString,
+    year: requiredString,
+    logline, optionalString,
   },
   { collection: collectionName } 
 );
