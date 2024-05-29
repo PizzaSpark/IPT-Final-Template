@@ -173,7 +173,6 @@ export default function Mongo() {
                 setRefreshDataList(!refreshDataList);
                 setModalState(false);
                 setImageUrl("");
-                
             } else {
                 alert("Failed to delete menu. Please try again!.");
             }
@@ -330,6 +329,8 @@ export default function Mongo() {
                                 label="Logline"
                                 value={currentData.logline}
                                 onChange={handleChange}
+                                multiline
+                                rows={4}
                             />
 
                             <div className="button-group">
